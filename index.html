@@ -959,7 +959,8 @@
                 checklistHTML += '</div></div>';
             }
             
-            const pdfContent = `
+            // Erste Seite: Hauptinhalt ohne Ersatzteile
+            const page1Content = `
                 <div style="font-family: Arial, sans-serif; padding: 20px; max-width: 800px; margin: 0 auto;">
                     <div style="text-align: center; margin-bottom: 20px; border-bottom: 3px solid #005293; padding-bottom: 20px;">
                         <h1 style="color: #005293; margin-bottom: 5px; font-size: 24px;">IBG HYDROTECH REPARATURAUFTRAG</h1>
@@ -984,9 +985,18 @@
                     </div>
                     
                     ${checklistHTML}
+                </div>
+            `;
+            
+            // Zweite Seite: Ersatzteile
+            const page2Content = orderData.parts && orderData.parts.length > 0 ? `
+                <div style="font-family: Arial, sans-serif; padding: 20px; max-width: 800px; margin: 0 auto;">
+                    <div style="text-align: center; margin-bottom: 20px; border-bottom: 3px solid #005293; padding-bottom: 20px;">
+                        <h1 style="color: #005293; margin-bottom: 5px; font-size: 24px;">IBG HYDROTECH REPARATURAUFTRAG</h1>
+                        <p style="color: #666; font-size: 14px;">Ersatzteil- und Materialliste</p>
+                    </div>
                     
-                    ${orderData.parts && orderData.parts.length > 0 ? `
-                    <div style="margin-bottom: 20px; page-break-before: always;">
+                    <div style="margin-bottom: 20px;">
                         <h3 style="color: #005293; border-bottom: 2px solid #e37222; padding-bottom: 5px; margin-bottom: 10px;">Ersatzteile</h3>
                         <table style="width: 100%; border-collapse: collapse; border: 1px solid #e0e0e0;">
                             <thead style="background: #005293; color: white;">
@@ -1007,36 +1017,61 @@
                             </tbody>
                         </table>
                     </div>
-                    ` : ''}
                     
                     <div style="margin-top: 30px; padding-top: 15px; border-top: 1px solid #ddd; text-align: center; font-size: 11px; color: #666;">
                         <p>© IBG HydroTech GmbH - Siemensstraße 39 - D63755 Alzenau</p>
                         <p>Erstellt: ${new Date().toLocaleDateString('de-DE')} ${new Date().toLocaleTimeString('de-DE')}</p>
                     </div>
                 </div>
-            `;
-            
-            const tempElement = document.createElement('div');
-            tempElement.style.position = 'absolute';
-            tempElement.style.left = '-9999px';
-            tempElement.style.width = '800px';
-            tempElement.innerHTML = pdfContent;
-            document.body.appendChild(tempElement);
+            ` : null;
             
             try {
-                const canvas = await html2canvas(tempElement, {
+                // Erste Seite rendern
+                const tempElement1 = document.createElement('div');
+                tempElement1.style.position = 'absolute';
+                tempElement1.style.left = '-9999px';
+                tempElement1.style.width = '800px';
+                tempElement1.innerHTML = page1Content;
+                document.body.appendChild(tempElement1);
+                
+                const canvas1 = await html2canvas(tempElement1, {
                     scale: 2,
                     useCORS: true,
                     logging: false
                 });
                 
-                document.body.removeChild(tempElement);
+                document.body.removeChild(tempElement1);
                 
-                const imgData = canvas.toDataURL('image/jpeg', 0.95);
+                const imgData1 = canvas1.toDataURL('image/jpeg', 0.95);
                 const imgWidth = 190;
-                const imgHeight = (canvas.height * imgWidth) / canvas.width;
+                const imgHeight1 = (canvas1.height * imgWidth) / canvas1.width;
                 
-                doc.addImage(imgData, 'JPEG', 10, 10, imgWidth, imgHeight);
+                doc.addImage(imgData1, 'JPEG', 10, 10, imgWidth, imgHeight1);
+                
+                // Zweite Seite rendern (nur wenn Ersatzteile vorhanden)
+                if (page2Content) {
+                    doc.addPage();
+                    
+                    const tempElement2 = document.createElement('div');
+                    tempElement2.style.position = 'absolute';
+                    tempElement2.style.left = '-9999px';
+                    tempElement2.style.width = '800px';
+                    tempElement2.innerHTML = page2Content;
+                    document.body.appendChild(tempElement2);
+                    
+                    const canvas2 = await html2canvas(tempElement2, {
+                        scale: 2,
+                        useCORS: true,
+                        logging: false
+                    });
+                    
+                    document.body.removeChild(tempElement2);
+                    
+                    const imgData2 = canvas2.toDataURL('image/jpeg', 0.95);
+                    const imgHeight2 = (canvas2.height * imgWidth) / canvas2.width;
+                    
+                    doc.addImage(imgData2, 'JPEG', 10, 10, imgWidth, imgHeight2);
+                }
                 
                 const fileName = `${orderData.vorgang}-${orderData.customer}.pdf`.replace(/[^a-zA-Z0-9\-_\.]/g, '_');
                 doc.save(fileName);
