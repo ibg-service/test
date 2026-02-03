@@ -341,7 +341,7 @@
         .orders-table {
             width: 100%;
             border-collapse: collapse;
-            min-width: 1600px;
+            min-width: 1750px;
         }
 
         .status-checkboxes {
@@ -529,6 +529,7 @@
                             <th style="width: 150px;">Kunde<br><input class="col-filter" data-field="customer"></th>
                             <th style="width: 120px;">Datum<br><input class="col-filter" data-field="entryDate"></th>
                             <th style="width: 200px;">Betrifft<br><input class="col-filter" data-field="subject"></th>
+                            <th style="width: 150px;">Seriennummer<br><input class="col-filter" data-field="serialNumber"></th>
                             <th style="width: 200px;">Fortschritt</th>
                             <th style="width: 220px;">Status</th>
                             <th style="width: 200px;">Aktionen</th>
@@ -831,6 +832,7 @@
                     <td>${order.customer}</td>
                     <td>${order.entryDate ? new Date(order.entryDate).toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric'}) : '-'}</td>
                     <td>${order.subject}</td>
+                    <td>${order.serialNumber || '-'}</td>
                     <td>
                         <div class="progress-bar-container">
                             <div class="progress-bar-fill" style="width: ${progressPercent}%">${progressPercent}%</div>
