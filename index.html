@@ -586,7 +586,7 @@
         let currentVorgangNumber = 1;
         
         // Sortierung
-        let currentSortField = 'vorgang';
+        let currentSortField = 'entryDate';
         let currentSortDirection = 'desc';
         
         document.addEventListener('DOMContentLoaded', function() {
@@ -994,6 +994,12 @@
             document.getElementById('error-description').value = order.errorDescription || '';
             document.getElementById('work-todo').value = order.workTodo || '';
             
+            // Eingangsdatum schreibgeschützt machen beim Laden eines bestehenden Auftrags
+            const entryDateField = document.getElementById('entry-date');
+            entryDateField.readOnly = true;
+            entryDateField.style.backgroundColor = '#f0f0f0';
+            entryDateField.style.cursor = 'not-allowed';
+            
             // Checklisten generieren
             generateTaskCheckboxes();
             
@@ -1050,6 +1056,12 @@
             document.getElementById('work-todo').value = '';
             document.getElementById('work-tasks-container').style.display = 'none';
             document.getElementById('table-body').innerHTML = '<tr><td><input type="text"></td><td><input type="text"></td><td><input type="text"></td></tr>';
+            
+            // Eingangsdatum wieder editierbar machen für neue Aufträge
+            const entryDateField = document.getElementById('entry-date');
+            entryDateField.readOnly = false;
+            entryDateField.style.backgroundColor = '';
+            entryDateField.style.cursor = '';
         }
         
         async function generatePDF(orderData) {
