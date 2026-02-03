@@ -586,7 +586,7 @@
         let currentVorgangNumber = 1;
         
         // Sortierung
-        let currentSortField = 'vorgang';
+        let currentSortField = 'entryDate';
         let currentSortDirection = 'desc';
         
         document.addEventListener('DOMContentLoaded', function() {
@@ -986,7 +986,24 @@
             document.getElementById('order-id').value = order.id;
             document.getElementById('vorgang').value = order.vorgang || '';
             document.getElementById('customer').value = order.customer || '';
-            document.getElementById('entry-date').value = order.entryDate || '';
+            
+            // Eingangsdatum korrekt formatieren für HTML date input
+            let formattedDate = '';
+            if (order.entryDate) {
+                // Verschiedene Datumsformate unterstützen
+                const dateObj = new Date(order.entryDate);
+                if (!isNaN(dateObj.getTime())) {
+                    // Datum ist gültig - in YYYY-MM-DD Format umwandeln
+                    const year = dateObj.getFullYear();
+                    const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+                    const day = String(dateObj.getDate()).padStart(2, '0');
+                    formattedDate = `${year}-${month}-${day}`;
+                } else {
+                    formattedDate = order.entryDate;
+                }
+            }
+            document.getElementById('entry-date').value = formattedDate;
+            
             document.getElementById('subject').value = order.subject || '';
             document.getElementById('serial-number').value = order.serialNumber || '';
             document.getElementById('name').value = order.name || '';
