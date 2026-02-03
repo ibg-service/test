@@ -187,6 +187,37 @@
             white-space: nowrap;
         }
         
+        .sortable-header {
+            cursor: pointer;
+            user-select: none;
+            position: relative;
+            padding-right: 25px;
+        }
+        
+        .sortable-header:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+        
+        .sortable-header::after {
+            content: '⇅';
+            position: absolute;
+            right: 8px;
+            top: 50%;
+            transform: translateY(-50%);
+            opacity: 0.5;
+            font-size: 1rem;
+        }
+        
+        .sortable-header.sort-asc::after {
+            content: '▲';
+            opacity: 1;
+        }
+        
+        .sortable-header.sort-desc::after {
+            content: '▼';
+            opacity: 1;
+        }
+        
         tbody tr {
             border-bottom: 1px solid var(--medium-gray);
             transition: background-color 0.3s;
@@ -525,12 +556,12 @@
                 <table class="orders-table">
                     <thead>
                         <tr>
-                            <th style="width: 120px;">Vorgang<br><input class="col-filter" data-field="vorgang"></th>
-                            <th style="width: 150px;">Kunde<br><input class="col-filter" data-field="customer"></th>
-                            <th style="width: 120px;">Datum<br><input class="col-filter" data-field="entryDate"></th>
-                            <th style="width: 200px;">Betrifft<br><input class="col-filter" data-field="subject"></th>
-                            <th style="width: 150px;">Seriennummer<br><input class="col-filter" data-field="serialNumber"></th>
-                            <th style="width: 200px;">Fortschritt</th>
+                            <th class="sortable-header" data-sort="vorgang" style="width: 120px;">Vorgang<br><input class="col-filter" data-field="vorgang"></th>
+                            <th class="sortable-header" data-sort="customer" style="width: 150px;">Kunde<br><input class="col-filter" data-field="customer"></th>
+                            <th class="sortable-header" data-sort="entryDate" style="width: 120px;">Datum<br><input class="col-filter" data-field="entryDate"></th>
+                            <th class="sortable-header" data-sort="subject" style="width: 200px;">Betrifft<br><input class="col-filter" data-field="subject"></th>
+                            <th class="sortable-header" data-sort="serialNumber" style="width: 150px;">Seriennummer<br><input class="col-filter" data-field="serialNumber"></th>
+                            <th class="sortable-header" data-sort="progress" style="width: 200px;">Fortschritt</th>
                             <th style="width: 220px;">Status</th>
                             <th style="width: 200px;">Aktionen</th>
                         </tr>
@@ -553,6 +584,10 @@
         let ordersDatabase = JSON.parse(localStorage.getItem('ibgOrdersDatabase')) || [];
         const currentYear = new Date().getFullYear();
         let currentVorgangNumber = 1;
+        
+        // Sortierung
+        let currentSortField = 'vorgang';
+        let currentSortDirection = 'desc';
         
         document.addEventListener('DOMContentLoaded', function() {
             const today = new Date().toISOString().split('T')[0];
@@ -643,6 +678,43 @@
                         });
                     }
                 });
+                renderOrdersTable(filtered);
+            });
+            
+            // Sortierung bei Klick auf Spaltenüberschriften
+            document.addEventListener('click', function(e) {
+                const header = e.target.closest('.sortable-header');
+                if (!header) return;
+                
+                // Klick auf Input-Feld ignorieren
+                if (e.target.classList.contains('col-filter')) return;
+                
+                const sortField = header.dataset.sort;
+                
+                // Wenn gleiche Spalte: Richtung wechseln, sonst auf aufsteigend setzen
+                if (currentSortField === sortField) {
+                    currentSortDirection = currentSortDirection === 'asc' ? 'desc' : 'asc';
+                } else {
+                    currentSortField = sortField;
+                    currentSortDirection = 'asc';
+                }
+                
+                // Aktuelle gefilterte Orders ermitteln
+                let filtered = [...ordersDatabase];
+                document.querySelectorAll('.col-filter').forEach(input => {
+                    const field = input.dataset.field;
+                    const value = input.value.toLowerCase();
+                    if (value) {
+                        filtered = filtered.filter(order => {
+                            let fieldValue = order[field] ?? '';
+                            if (field === 'entryDate' && fieldValue) {
+                                fieldValue = new Date(fieldValue).toLocaleDateString('de-DE');
+                            }
+                            return fieldValue.toString().toLowerCase().includes(value);
+                        });
+                    }
+                });
+                
                 renderOrdersTable(filtered);
             });
         });
@@ -815,7 +887,41 @@
             emptyState.style.display = 'none';
             ordersBody.innerHTML = '';
             
-            const sortedOrders = [...orders].sort((a, b) => new Date(b.entryDate) - new Date(a.entryDate));
+            // Dynamische Sortierung basierend auf currentSortField und currentSortDirection
+            const sortedOrders = [...orders].sort((a, b) => {
+                let valA, valB;
+                
+                if (currentSortField === 'progress') {
+                    // Fortschritt berechnen
+                    const calcProgress = (order) => {
+                        if (!order.workTasks || order.workTasks.length === 0) return 0;
+                        const comp = order.workTasks.filter(t => t.completed).length;
+                        return (comp / order.workTasks.length) * 100;
+                    };
+                    valA = calcProgress(a);
+                    valB = calcProgress(b);
+                } else if (currentSortField === 'entryDate') {
+                    valA = a.entryDate ? new Date(a.entryDate).getTime() : 0;
+                    valB = b.entryDate ? new Date(b.entryDate).getTime() : 0;
+                } else {
+                    valA = (a[currentSortField] || '').toString().toLowerCase();
+                    valB = (b[currentSortField] || '').toString().toLowerCase();
+                }
+                
+                if (currentSortDirection === 'asc') {
+                    return valA > valB ? 1 : valA < valB ? -1 : 0;
+                } else {
+                    return valA < valB ? 1 : valA > valB ? -1 : 0;
+                }
+            });
+            
+            // Sortier-Indikatoren aktualisieren
+            document.querySelectorAll('.sortable-header').forEach(header => {
+                header.classList.remove('sort-asc', 'sort-desc');
+                if (header.dataset.sort === currentSortField) {
+                    header.classList.add(currentSortDirection === 'asc' ? 'sort-asc' : 'sort-desc');
+                }
+            });
             
             sortedOrders.forEach(order => {
                 let progressPercent = 0;
