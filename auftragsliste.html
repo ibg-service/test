@@ -292,7 +292,7 @@
                             <th class="sortable-header" data-sort="serialNumber" style="width: 150px;">Seriennummer<br><input class="col-filter" data-field="serialNumber"></th>
                             <th class="sortable-header" data-sort="progress" style="width: 200px;">Fortschritt</th>
                             <th style="width: 220px;">Status</th>
-                            <th style="width: 200px;">Aktionen</th>
+                            <th style="width: 320px;">Aktionen</th>
                         </tr>
                     </thead>
                     <tbody id="orders-body"></tbody>
@@ -486,8 +486,9 @@
                         </div>
                     </td>
                     <td>
-                        <div style="display: flex; gap: 5px;">
+                        <div style="display: flex; gap: 5px; flex-wrap: wrap;">
                             <button class="edit-btn" onclick="editOrder('${order.id}')">Laden</button>
+                            <button class="edit-btn" onclick="openAcceptanceProtocol('${order.id}')" style="background:#17a2b8;">Abnahmeprotokoll anzeigen</button>
                             <button class="delete-btn" onclick="deleteOrder('${order.id}')">X</button>
                         </div>
                     </td>
@@ -509,6 +510,10 @@
 
         window.editOrder = function(id) {
             window.location.href = `neuer_auftrag.html?id=${encodeURIComponent(id)}`;
+        };
+
+        window.openAcceptanceProtocol = function(id) {
+            window.location.href = `abnahmeprotokoll.html?id=${encodeURIComponent(id)}&mode=view`;
         };
 
         window.deleteOrder = function(id) {

@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Abnahmeprotokoll - IBG HydroTech</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
         :root {
             --primary-blue: #005293;
@@ -15,98 +17,46 @@
             --dark-gray: #333;
             --text-gray: #666;
             --white: #ffffff;
+            --success-green: #28a745;
         }
 
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background: linear-gradient(135deg, #f0f2f5 0%, #e6e9f0 100%); color: var(--dark-gray); line-height: 1.6; min-height: 100vh; padding: 20px; }
+        .container { max-width: 1200px; margin: 0 auto; background: var(--white); border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); overflow: hidden; }
+        header { background: linear-gradient(to right, var(--primary-blue), var(--secondary-blue)); color: var(--white); padding: 2rem; text-align: center; }
+        .logo { display: flex; align-items: center; justify-content: center; margin-bottom: 1rem; }
+        .logo-icon { font-size: 2.5rem; margin-right: 15px; }
+        h1 { font-size: 2.2rem; margin-bottom: 0.3rem; }
+        .content { padding: 2rem; }
+        .action-bar { display: flex; justify-content: space-between; gap: 1rem; flex-wrap: wrap; margin-bottom: 1rem; }
 
-        body {
-            background: linear-gradient(135deg, #f0f2f5 0%, #e6e9f0 100%);
-            color: var(--dark-gray);
-            line-height: 1.6;
-            min-height: 100vh;
-            padding: 20px;
-        }
+        button { padding: 0.7rem 1.4rem; border: none; border-radius: 40px; font-size: 1rem; font-weight: 600; cursor: pointer; transition: all .2s; display: inline-flex; align-items: center; gap: 8px; }
+        .btn-secondary { background: var(--medium-gray); color: var(--dark-gray); }
+        .btn-success { background: linear-gradient(to right, var(--success-green), #34ce57); color: #fff; }
+        .btn-primary { background: linear-gradient(to right, var(--accent-orange), #f17a35); color: #fff; }
+        .btn-info { background: linear-gradient(to right, var(--secondary-blue), #1591dd); color: #fff; }
+        .btn-danger { background: #dc3545; color: #fff; }
 
-        .container {
-            max-width: 900px;
-            margin: 0 auto;
-            background: var(--white);
-            border-radius: 12px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-            overflow: hidden;
-        }
+        .table-container { overflow-x: auto; border: 1px solid var(--medium-gray); border-radius: 8px; }
+        table { width: 100%; border-collapse: collapse; min-width: 1100px; }
+        thead { background: linear-gradient(to right, var(--primary-blue), var(--secondary-blue)); color: #fff; }
+        th, td { padding: 0.85rem; text-align: left; border-bottom: 1px solid var(--medium-gray); }
 
-        header {
-            background: linear-gradient(to right, var(--primary-blue), var(--secondary-blue));
-            color: var(--white);
-            padding: 2rem;
-            text-align: center;
+        .section { margin-top: 1.2rem; border: 1px solid var(--medium-gray); border-radius: 10px; padding: 1rem; background: #fafafa; }
+        .section-title { color: var(--primary-blue); margin-bottom: .8rem; display:flex; align-items:center; gap:8px; }
+        .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 0.8rem; }
+        .form-group { display: flex; flex-direction: column; gap: .4rem; }
+        label { font-weight: 700; color: var(--primary-blue); }
+        input[type="text"], input[type="date"], textarea {
+            width: 100%; border: 1px solid var(--medium-gray); border-radius: 8px; padding: .7rem .8rem; font-size: 1rem;
         }
-
-        .logo {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-bottom: 1rem;
-        }
-
-        .logo-icon {
-            font-size: 2.5rem;
-            margin-right: 15px;
-        }
-
-        h1 {
-            font-size: 2.3rem;
-            margin-bottom: 0.5rem;
-            font-weight: 700;
-        }
-
-        .content {
-            padding: 2rem;
-            text-align: center;
-        }
-
-        .placeholder {
-            padding: 2rem;
-            border: 2px dashed var(--medium-gray);
-            border-radius: 12px;
-            background: var(--light-gray);
-        }
-
-        .placeholder h2 {
-            color: var(--primary-blue);
-            margin-bottom: 0.5rem;
-        }
-
-        .placeholder p {
-            color: var(--text-gray);
-            margin-bottom: 1.5rem;
-        }
-
-        button {
-            padding: 0.8rem 2rem;
-            border: none;
-            border-radius: 50px;
-            font-size: 1.1rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            min-width: 180px;
-        }
-
-        .btn-secondary {
-            background-color: var(--medium-gray);
-            color: var(--dark-gray);
-        }
+        textarea { min-height: 90px; resize: vertical; }
+        .readonly-field { background: #eceff3; color: #444; }
+        .check-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: .6rem; margin-bottom: 0.8rem; }
+        .check-item { display: flex; align-items: center; gap: .6rem; padding: .55rem .7rem; border: 1px solid var(--medium-gray); border-radius: 8px; background: #fff; }
+        .check-item input { width: 18px; height: 18px; }
+        .hidden { display: none !important; }
+        .hint { color: var(--text-gray); font-size: .95rem; margin-top: .5rem; }
     </style>
 </head>
 <body>
@@ -116,17 +66,397 @@
                 <div class="logo-icon"><i class="fas fa-clipboard-check"></i></div>
                 <div>
                     <h1>ABNAHMEPROTOKOLL</h1>
+                    <p>Aufträge mit vollständig erledigter Aufgabenliste</p>
                 </div>
             </div>
         </header>
 
         <div class="content">
-            <div class="placeholder">
-                <h2>Platzhalter für das Abnahmeprotokoll</h2>
-                <p>Hier kannst du später das Abnahmeprotokoll ergänzen, ohne das bestehende Design zu verändern.</p>
-                <button class="btn-secondary" onclick="window.location.href='index.html'">← Zur Startseite</button>
+            <div class="action-bar">
+                <button class="btn-secondary" id="back-to-orders-btn">← Auftragsliste</button>
+                <button class="btn-secondary" id="new-order-btn">+ Neuer Auftrag</button>
+            </div>
+
+            <div id="eligible-container">
+                <h2 class="section-title"><i class="fas fa-list"></i> Bereite Aufträge für Abnahme</h2>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Vorgang</th>
+                                <th>Kunde</th>
+                                <th>Datum</th>
+                                <th>Betrifft</th>
+                                <th>Seriennummer</th>
+                                <th>Fortschritt</th>
+                                <th>Aktion</th>
+                            </tr>
+                        </thead>
+                        <tbody id="eligible-orders-body"></tbody>
+                    </table>
+                </div>
+                <div id="no-eligible" class="hint hidden">Es sind aktuell keine vollständig bearbeiteten Aufträge vorhanden.</div>
+            </div>
+
+            <div id="protocol-editor" class="hidden">
+                <div class="action-bar" style="margin-top:1rem;">
+                    <button class="btn-secondary" id="back-to-list-btn">← Zur Liste</button>
+                    <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                        <button class="btn-info" id="save-protocol-btn">Speichern</button>
+                        <button class="btn-primary" id="pdf-protocol-btn">PDF erstellen</button>
+                    </div>
+                </div>
+
+                <section class="section" id="protocol-content">
+                    <h3 class="section-title"><i class="fas fa-id-card"></i> Auftragsstammdaten (nur Anzeige)</h3>
+                    <div class="form-grid">
+                        <div class="form-group"><label>Vorgang</label><input type="text" id="p-vorgang" class="readonly-field" readonly></div>
+                        <div class="form-group"><label>Kunde</label><input type="text" id="p-customer" class="readonly-field" readonly></div>
+                        <div class="form-group"><label>Eingangsdatum</label><input type="text" id="p-entry-date" class="readonly-field" readonly></div>
+                        <div class="form-group"><label>Betrifft</label><input type="text" id="p-subject" class="readonly-field" readonly></div>
+                        <div class="form-group"><label>Seriennummer</label><input type="text" id="p-serial" class="readonly-field" readonly></div>
+                        <div class="form-group"><label>Verantwortlich</label><input type="text" id="p-name" class="readonly-field" readonly></div>
+                    </div>
+                </section>
+
+                <section class="section">
+                    <h3 class="section-title"><i class="fas fa-bolt"></i> Elektrische Funktionsüberprüfung</h3>
+                    <div class="check-grid" id="elektrisch-checks"></div>
+                    <div class="form-group">
+                        <label for="remarks-elektrisch">Sonstige Anmerkungen</label>
+                        <textarea id="remarks-elektrisch"></textarea>
+                    </div>
+                </section>
+
+                <section class="section">
+                    <h3 class="section-title"><i class="fas fa-vial"></i> Sonstige Prüfungen</h3>
+                    <div class="check-grid" id="sonstige-checks"></div>
+                    <div class="form-group">
+                        <label for="remarks-sonstige">Sonstige Anmerkungen</label>
+                        <textarea id="remarks-sonstige"></textarea>
+                    </div>
+                </section>
+
+                <section class="section">
+                    <h3 class="section-title"><i class="fas fa-signature"></i> Abschluss</h3>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="inspection-date">Prüfdatum</label>
+                            <input type="date" id="inspection-date">
+                        </div>
+                        <div class="form-group">
+                            <label for="inspector-name">Prüfer</label>
+                            <input type="text" id="inspector-name" placeholder="Name des Prüfers">
+                        </div>
+                    </div>
+                </section>
             </div>
         </div>
     </div>
+
+    <script>
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxngv6vt3H4LdXKCKexvx59eycpYQAY98Bmfra4Ugbr6bENc9a7FyHo7AQEonmn2lHv3Q/exec';
+        let ordersDatabase = JSON.parse(localStorage.getItem('ibgOrdersDatabase')) || [];
+        let currentOrder = null;
+        let readOnlyMode = false;
+
+        document.addEventListener('DOMContentLoaded', async function() {
+            document.getElementById('back-to-orders-btn').addEventListener('click', () => window.location.href = 'auftragsliste.html');
+            document.getElementById('new-order-btn').addEventListener('click', () => window.location.href = 'neuer_auftrag.html');
+            document.getElementById('back-to-list-btn').addEventListener('click', showEligibleList);
+            document.getElementById('save-protocol-btn').addEventListener('click', saveProtocol);
+            document.getElementById('pdf-protocol-btn').addEventListener('click', generateProtocolPdf);
+
+            await loadOrdersFromCloud();
+            loadOrdersListFromLocal();
+            handleQueryOpen();
+        });
+
+        function getAccessorySelection(order = {}) {
+            return {
+                festeKamera: !!(order.accessory_festeKamera ?? order.accessories?.festeKamera),
+                drehkamera: !!(order.accessory_drehkamera ?? order.accessories?.drehkamera),
+                steuerkoffer: !!(order.accessory_steuerkoffer ?? order.accessories?.steuerkoffer)
+            };
+        }
+
+        function isOrderReadyForAcceptance(order) {
+            return !!(order.workTasks && order.workTasks.length > 0 && order.workTasks.every(t => t.completed));
+        }
+
+        function loadOrdersListFromLocal() {
+            ordersDatabase = JSON.parse(localStorage.getItem('ibgOrdersDatabase')) || [];
+            renderEligibleOrders();
+        }
+
+        async function loadOrdersFromCloud() {
+            if (!SCRIPT_URL) return;
+            try {
+                const response = await fetch(SCRIPT_URL);
+                const cloudData = await response.json();
+                if (Array.isArray(cloudData)) {
+                    ordersDatabase = cloudData;
+                    localStorage.setItem('ibgOrdersDatabase', JSON.stringify(ordersDatabase));
+                }
+            } catch (e) {
+                console.error('Cloud-Ladefehler:', e);
+            }
+        }
+
+        async function syncOrderToCloud(data) {
+            if (!SCRIPT_URL) return;
+            try {
+                await fetch(SCRIPT_URL, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+            } catch (e) {
+                console.error('Cloud-Sync-Fehler:', e);
+            }
+        }
+
+        function renderEligibleOrders() {
+            const body = document.getElementById('eligible-orders-body');
+            const noEligible = document.getElementById('no-eligible');
+            body.innerHTML = '';
+
+            const eligible = ordersDatabase.filter(isOrderReadyForAcceptance);
+
+            if (eligible.length === 0) {
+                noEligible.classList.remove('hidden');
+                return;
+            }
+            noEligible.classList.add('hidden');
+
+            eligible.forEach(order => {
+                const completed = order.workTasks.filter(t => t.completed).length;
+                const progressText = `${completed}/${order.workTasks.length} erledigt`;
+                const hasProtocol = !!order.acceptanceProtocol;
+
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${order.vorgang || '-'}</td>
+                    <td>${order.customer || '-'}</td>
+                    <td>${order.entryDate ? new Date(order.entryDate).toLocaleDateString('de-DE') : '-'}</td>
+                    <td>${order.subject || '-'}</td>
+                    <td>${order.serialNumber || '-'}</td>
+                    <td>${progressText}</td>
+                    <td>
+                        <button class="btn-success" onclick="openProtocolEditor('${order.id}', false)">Abnahmeprotokoll erstellen</button>
+                        ${hasProtocol ? `<button class="btn-secondary" style="margin-left:6px;" onclick="openProtocolEditor('${order.id}', true)">Abnahmeprotokoll anzeigen</button>` : ''}
+                    </td>
+                `;
+                body.appendChild(tr);
+            });
+        }
+
+        function handleQueryOpen() {
+            const params = new URLSearchParams(window.location.search);
+            const id = params.get('id');
+            const mode = params.get('mode');
+            if (!id) return;
+            openProtocolEditor(id, mode === 'view');
+        }
+
+        window.openProtocolEditor = function(orderId, viewMode) {
+            const order = ordersDatabase.find(o => String(o.id) === String(orderId));
+            if (!order) {
+                alert('Auftrag nicht gefunden.');
+                return;
+            }
+            if (!isOrderReadyForAcceptance(order) && !order.acceptanceProtocol) {
+                alert('Dieser Auftrag ist noch nicht vollständig erledigt.');
+                return;
+            }
+
+            currentOrder = order;
+            readOnlyMode = !!viewMode;
+
+            document.getElementById('eligible-container').classList.add('hidden');
+            document.getElementById('protocol-editor').classList.remove('hidden');
+
+            fillMasterData(order);
+            renderChecklist(order, order.acceptanceProtocol || {});
+            applyReadOnlyMode();
+        };
+
+        function fillMasterData(order) {
+            document.getElementById('p-vorgang').value = order.vorgang || '';
+            document.getElementById('p-customer').value = order.customer || '';
+            document.getElementById('p-entry-date').value = order.entryDate ? new Date(order.entryDate).toLocaleDateString('de-DE') : '';
+            document.getElementById('p-subject').value = order.subject || '';
+            document.getElementById('p-serial').value = order.serialNumber || '';
+            document.getElementById('p-name').value = order.name || '';
+        }
+
+        function buildElectricalItems(order) {
+            const items = [
+                'Fahren/Vorschub',
+                'Drehen',
+                'Heben',
+                'Spülen'
+            ];
+
+            if ((order.subject || '').toUpperCase().includes('HC200')) {
+                items.push('Fräskopf schwenken');
+            }
+
+            const accessories = getAccessorySelection(order);
+            if (accessories.drehkamera) {
+                items.push('LED´s Drehkamera', 'Bild Drehkamera', 'Drehen Drehkamera');
+            }
+            if (accessories.drehkamera && accessories.festeKamera) {
+                items.push('LED´s Feste Kamera', 'Bild Feste Kamera');
+            }
+            if (accessories.steuerkoffer) {
+                items.push(
+                    'Linker Joystick hoch/runter',
+                    'Linker Joystick links/rechts',
+                    'Rechter Joystick hoch/runter',
+                    'Rechter Joystick links/rechts',
+                    'Kamerabilder',
+                    'Kamera umschalten'
+                );
+            }
+            return items;
+        }
+
+        function renderCheckboxGroup(containerId, items, selected = {}, prefix) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = '';
+            items.forEach((labelText, idx) => {
+                const safeId = `${prefix}-${idx}`;
+                const checked = !!selected[labelText];
+                const div = document.createElement('div');
+                div.className = 'check-item';
+                div.innerHTML = `
+                    <input type="checkbox" id="${safeId}" data-label="${labelText.replace(/"/g, '&quot;')}" ${checked ? 'checked' : ''}>
+                    <label for="${safeId}">${labelText}</label>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        function renderChecklist(order, protocol) {
+            const electricalItems = buildElectricalItems(order);
+            const otherItems = ['Dichtigkeitstest (Wasserbad)', 'Fräsen'];
+
+            renderCheckboxGroup('elektrisch-checks', electricalItems, protocol.electricalChecks || {}, 'el');
+            renderCheckboxGroup('sonstige-checks', otherItems, protocol.otherChecks || {}, 'so');
+
+            document.getElementById('remarks-elektrisch').value = protocol.remarksElectrical || '';
+            document.getElementById('remarks-sonstige').value = protocol.remarksOther || '';
+            document.getElementById('inspection-date').value = protocol.inspectionDate || new Date().toISOString().split('T')[0];
+            document.getElementById('inspector-name').value = protocol.inspectorName || '';
+        }
+
+        function collectChecks(containerId) {
+            const result = {};
+            document.querySelectorAll(`#${containerId} input[type="checkbox"]`).forEach(cb => {
+                result[cb.dataset.label] = cb.checked;
+            });
+            return result;
+        }
+
+        function collectProtocolData() {
+            return {
+                electricalChecks: collectChecks('elektrisch-checks'),
+                remarksElectrical: document.getElementById('remarks-elektrisch').value.trim(),
+                otherChecks: collectChecks('sonstige-checks'),
+                remarksOther: document.getElementById('remarks-sonstige').value.trim(),
+                inspectionDate: document.getElementById('inspection-date').value,
+                inspectorName: document.getElementById('inspector-name').value.trim(),
+                savedAt: new Date().toISOString()
+            };
+        }
+
+        function applyReadOnlyMode() {
+            const disabled = readOnlyMode;
+            document.querySelectorAll('#protocol-editor input[type="checkbox"]').forEach(el => el.disabled = disabled);
+            document.querySelectorAll('#protocol-editor textarea, #protocol-editor input[type="date"], #protocol-editor input[type="text"]:not(.readonly-field)').forEach(el => el.disabled = disabled);
+            document.getElementById('save-protocol-btn').classList.toggle('hidden', disabled);
+        }
+
+        async function saveProtocol() {
+            if (!currentOrder) return;
+            const protocolData = collectProtocolData();
+            if (!protocolData.inspectionDate || !protocolData.inspectorName) {
+                alert('Bitte Prüfdatum und Prüfer eintragen.');
+                return;
+            }
+
+            const idx = ordersDatabase.findIndex(o => String(o.id) === String(currentOrder.id));
+            if (idx === -1) return;
+
+            const updated = { ...ordersDatabase[idx] };
+            updated.acceptanceProtocol = protocolData;
+            updated.status = updated.status || {};
+            updated.status.reparaturAbgeschlossen = true;
+
+            ordersDatabase[idx] = updated;
+            currentOrder = updated;
+            localStorage.setItem('ibgOrdersDatabase', JSON.stringify(ordersDatabase));
+            await syncOrderToCloud(updated);
+
+            alert('Abnahmeprotokoll wurde gespeichert.');
+            renderEligibleOrders();
+        }
+
+        function showEligibleList() {
+            currentOrder = null;
+            readOnlyMode = false;
+            document.getElementById('protocol-editor').classList.add('hidden');
+            document.getElementById('eligible-container').classList.remove('hidden');
+            renderEligibleOrders();
+        }
+
+        async function generateProtocolPdf() {
+            if (!currentOrder) return;
+            const protocol = currentOrder.acceptanceProtocol || collectProtocolData();
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF('p', 'mm', 'a4');
+
+            const trueChecks = (obj) => Object.entries(obj || {}).filter(([_, v]) => v).map(([k]) => k);
+            const falseChecks = (obj) => Object.entries(obj || {}).filter(([_, v]) => !v).map(([k]) => k);
+
+            const html = `
+                <div style="font-family: Arial, sans-serif; padding: 20px; width: 760px;">
+                    <h2 style="color:#005293;">IBG HYDROTECH - ABNAHMEPROTOKOLL</h2>
+                    <p><strong>Vorgang:</strong> ${currentOrder.vorgang || '-'}</p>
+                    <p><strong>Kunde:</strong> ${currentOrder.customer || '-'}</p>
+                    <p><strong>Betrifft:</strong> ${currentOrder.subject || '-'}</p>
+                    <p><strong>Seriennummer:</strong> ${currentOrder.serialNumber || '-'}</p>
+                    <hr>
+                    <h3>Elektrische Funktionsüberprüfung</h3>
+                    <p><strong>OK:</strong> ${trueChecks(protocol.electricalChecks).join(', ') || '-'}</p>
+                    <p><strong>Nicht OK:</strong> ${falseChecks(protocol.electricalChecks).join(', ') || '-'}</p>
+                    <p><strong>Sonstige Anmerkungen:</strong> ${protocol.remarksElectrical || '-'}</p>
+                    <h3>Sonstige Prüfungen</h3>
+                    <p><strong>OK:</strong> ${trueChecks(protocol.otherChecks).join(', ') || '-'}</p>
+                    <p><strong>Nicht OK:</strong> ${falseChecks(protocol.otherChecks).join(', ') || '-'}</p>
+                    <p><strong>Sonstige Anmerkungen:</strong> ${protocol.remarksOther || '-'}</p>
+                    <hr>
+                    <p><strong>Prüfdatum:</strong> ${protocol.inspectionDate || '-'}</p>
+                    <p><strong>Prüfer:</strong> ${protocol.inspectorName || '-'}</p>
+                </div>
+            `;
+
+            const temp = document.createElement('div');
+            temp.style.position = 'absolute';
+            temp.style.left = '-9999px';
+            temp.innerHTML = html;
+            document.body.appendChild(temp);
+            const canvas = await html2canvas(temp, { scale: 2, backgroundColor: '#fff' });
+            document.body.removeChild(temp);
+
+            const imgData = canvas.toDataURL('image/png');
+            const imgWidth = 190;
+            const imgHeight = canvas.height * imgWidth / canvas.width;
+            doc.addImage(imgData, 'PNG', 10, 10, imgWidth, imgHeight);
+            doc.save(`abnahmeprotokoll_${currentOrder.vorgang || currentOrder.id}.pdf`);
+        }
+    </script>
 </body>
 </html>
