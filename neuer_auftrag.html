@@ -407,6 +407,36 @@
             color: white;
         }
 
+        .checkbox-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.6rem 1rem;
+            border: 1px solid var(--medium-gray);
+            border-radius: 8px;
+            background: #fafafa;
+        }
+
+        .checkbox-item input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+
+        .checkbox-item label {
+            font-size: 1rem;
+            color: var(--dark-gray);
+            font-weight: 600;
+            cursor: pointer;
+        }
+
         .delete-btn {
             background: #dc3545;
             color: white;
@@ -468,6 +498,32 @@
                     <div class="form-group">
                         <label for="hours"><i class="fas fa-clock"></i> Stunden:</label>
                         <input type="number" id="hours" step="0.1" min="0">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label><i class="fas fa-toolbox"></i> Mitgeliefertes Zubehör</label>
+                    <div class="checkbox-group">
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="accessory-feste-kamera">
+                            <label for="accessory-feste-kamera">Feste Kamera</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="accessory-drehkamera">
+                            <label for="accessory-drehkamera">Drehkamera</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="accessory-steuerkoffer">
+                            <label for="accessory-steuerkoffer">Steuerkoffer</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="accessory-haspel">
+                            <label for="accessory-haspel">Haspel</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="accessory-fahrzeug">
+                            <label for="accessory-fahrzeug">Fahrzeug</label>
+                        </div>
                     </div>
                 </div>
             </section>
@@ -697,6 +753,16 @@
             });
         }
         
+        function getAccessorySelection(order = {}) {
+            return {
+                festeKamera: !!(order.accessory_festeKamera ?? order.accessories?.festeKamera),
+                drehkamera: !!(order.accessory_drehkamera ?? order.accessories?.drehkamera),
+                steuerkoffer: !!(order.accessory_steuerkoffer ?? order.accessories?.steuerkoffer),
+                haspel: !!(order.accessory_haspel ?? order.accessories?.haspel),
+                fahrzeug: !!(order.accessory_fahrzeug ?? order.accessories?.fahrzeug)
+            };
+        }
+
         function collectOrderData() {
             const orderId = document.getElementById('order-id').value;
             // Wichtig: ID als Zahl oder String konsistent behandeln
@@ -715,6 +781,11 @@
                 hours: parseFloat(document.getElementById('hours').value) || 0,
                 errorDescription: document.getElementById('error-description').value.trim(),
                 workTodo: document.getElementById('work-todo').value.trim(),
+                accessory_festeKamera: document.getElementById('accessory-feste-kamera').checked,
+                accessory_drehkamera: document.getElementById('accessory-drehkamera').checked,
+                accessory_steuerkoffer: document.getElementById('accessory-steuerkoffer').checked,
+                accessory_haspel: document.getElementById('accessory-haspel').checked,
+                accessory_fahrzeug: document.getElementById('accessory-fahrzeug').checked,
                 workTasks: [],
                 parts: []
             };
@@ -923,6 +994,12 @@
             document.getElementById('hours').value = order.hours || 0;
             document.getElementById('error-description').value = order.errorDescription || '';
             document.getElementById('work-todo').value = order.workTodo || '';
+            const accessorySelection = getAccessorySelection(order);
+            document.getElementById('accessory-feste-kamera').checked = accessorySelection.festeKamera;
+            document.getElementById('accessory-drehkamera').checked = accessorySelection.drehkamera;
+            document.getElementById('accessory-steuerkoffer').checked = accessorySelection.steuerkoffer;
+            document.getElementById('accessory-haspel').checked = accessorySelection.haspel;
+            document.getElementById('accessory-fahrzeug').checked = accessorySelection.fahrzeug;
             
             // Eingangsdatum schreibgeschützt machen beim Laden eines bestehenden Auftrags
             const entryDateField = document.getElementById('entry-date');
@@ -981,6 +1058,11 @@
             document.getElementById('hours').value = '';
             document.getElementById('error-description').value = '';
             document.getElementById('work-todo').value = '';
+            document.getElementById('accessory-feste-kamera').checked = false;
+            document.getElementById('accessory-drehkamera').checked = false;
+            document.getElementById('accessory-steuerkoffer').checked = false;
+            document.getElementById('accessory-haspel').checked = false;
+            document.getElementById('accessory-fahrzeug').checked = false;
             document.getElementById('work-tasks-container').style.display = 'none';
             document.getElementById('table-body').innerHTML = '<tr><td><input type="text"></td><td><input type="text"></td><td><input type="text"></td></tr>';
             
@@ -995,6 +1077,7 @@
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF('p', 'mm', 'a4');
             
+            const accessorySelection = getAccessorySelection(orderData);
             let checklistHTML = '';
             if (orderData.workTasks && orderData.workTasks.length > 0) {
                 checklistHTML = '<div style="margin-bottom: 20px;"><h3 style="color: #005293; border-bottom: 2px solid #e37222; padding-bottom: 5px; margin-bottom: 10px;">Aufgaben-Checkliste</h3><div style="background: #f9f9f9; padding: 15px; border-radius: 5px; border: 1px solid #e0e0e0;">';
@@ -1023,6 +1106,13 @@
                             <tr><td style="padding: 5px 0;"><strong>Seriennummer:</strong></td><td style="padding: 5px 0;">${orderData.serialNumber || '-'}</td></tr>
                             <tr><td style="padding: 5px 0;"><strong>Verantwortlich:</strong></td><td style="padding: 5px 0;">${orderData.name}</td></tr>
                             <tr><td style="padding: 5px 0;"><strong>Stunden:</strong></td><td style="padding: 5px 0;">${orderData.hours.toFixed(1)} h</td></tr>
+                            <tr><td style="padding: 5px 0;"><strong>Mitgeliefertes Zubehör:</strong></td><td style="padding: 5px 0;">${[
+                                accessorySelection.festeKamera ? 'Feste Kamera' : null,
+                                accessorySelection.drehkamera ? 'Drehkamera' : null,
+                                accessorySelection.steuerkoffer ? 'Steuerkoffer' : null,
+                                accessorySelection.haspel ? 'Haspel' : null,
+                                accessorySelection.fahrzeug ? 'Fahrzeug' : null
+                            ].filter(Boolean).join(', ') || '-'}</td></tr>
                         </table>
                     </div>
                     
@@ -1130,4 +1220,3 @@
     </script>
 </body>
 </html>
-
